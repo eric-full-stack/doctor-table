@@ -6,7 +6,7 @@ import { format } from "date-fns";
 export async function getTransactions() {
   const { getToken } = auth();
   const token = await getToken();
-  const result = await fetch("http://localhost:3000/api/transactions", {
+  const result = await fetch(`${process.env.BASE_URL}/api/transactions`, {
     cache: "no-cache",
     headers: {
       "Content-Type": "application/json",
