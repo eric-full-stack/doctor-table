@@ -30,14 +30,27 @@ export function DataTableToolbar<TData>({
   return (
     <div className="flex items-center justify-between">
       <div className="flex flex-col sm:flex-row flex-1 ">
-        <div className="flex flex-1 items-center space-x-2 w-full">
+        {isFiltered && (
+          <Button
+            variant="ghost"
+            onClick={() => {
+              table.resetColumnFilters();
+              setSelectedDate(undefined);
+            }}
+            className="h-8 px-2 lg:px-3"
+          >
+            Limpar
+            <Cross2Icon className="ml-2 h-4 w-4" />
+          </Button>
+        )}
+        <div className="flex flex-1 items-center space-x-1 w-full">
           <Input
             placeholder="Filtrar por título..."
             value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
             onChange={(event) =>
               table.getColumn("title")?.setFilterValue(event.target.value)
             }
-            className="h-8 w-[150px] lg:w-[250px]"
+            className="h-8 w-[80px] sm:w-[100px] lg:w-[250px]"
           />
           {table.getColumn("status") && (
             <DataTableFacetedFilter
@@ -52,7 +65,7 @@ export function DataTableToolbar<TData>({
                 <Button
                   variant={"outline"}
                   className={cn(
-                    "max-w-[240px] min-w-[120px] pl-3 text-left font-normal",
+                    "max-w-[240px] min-w-[100px] pl-3 text-left font-normal",
                     !selectedDate && "text-muted-foreground"
                   )}
                 >
@@ -83,19 +96,6 @@ export function DataTableToolbar<TData>({
             </Popover>
           )}
         </div>
-        {isFiltered && (
-          <Button
-            variant="ghost"
-            onClick={() => {
-              table.resetColumnFilters();
-              setSelectedDate(undefined);
-            }}
-            className="h-8 px-2 lg:px-3"
-          >
-            Limpar
-            <Cross2Icon className="ml-2 h-4 w-4" />
-          </Button>
-        )}
       </div>
       <DataTableViewOptions table={table} />
     </div>

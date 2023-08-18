@@ -204,7 +204,7 @@ export function TransactionForm() {
                   )}
                 />
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex  items-center gap-4">
                 <Label htmlFor="date" className="text-right w-[100px]">
                   Data
                 </Label>
@@ -219,7 +219,7 @@ export function TransactionForm() {
                             <Button
                               variant={"outline"}
                               className={cn(
-                                "w-[240px] pl-3 text-left font-normal",
+                                "min-w-[218px] max-w-[220px] w-full pl-3 text-left font-normal",
                                 !field.value && "text-muted-foreground"
                               )}
                             >
