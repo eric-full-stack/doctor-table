@@ -5,7 +5,6 @@ import { sql } from "@vercel/postgres";
 
 export async function POST(req: Request, res: Response) {
   const body = await req.json();
-  body.date = new Date(body.date);
   const data = procedureSchema.parse(body);
   const procedure = await newProcedure(data);
 
