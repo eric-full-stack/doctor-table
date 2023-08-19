@@ -5,16 +5,20 @@ import { Table } from "@tanstack/react-table";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { DataTableViewOptions } from "@/components/transactions/data-table-view-options";
+import { DataTableViewOptions } from "@/components/data-table-view-options";
 
-import { labels, statuses } from "./data";
+import { statuses } from "./transactions/data";
 import { DataTableFacetedFilter } from "./data-table-faceted-filter";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
-import { Calendar } from "../ui/calendar";
+import { Calendar } from "@/components/ui/calendar";
 import { ptBR } from "date-fns/locale";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { useState } from "react";
 
 interface DataTableToolbarProps<TData> {

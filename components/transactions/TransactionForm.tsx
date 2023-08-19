@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Sheet,
-  SheetClose,
   SheetContent,
   SheetDescription,
   SheetFooter,
@@ -29,17 +28,26 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { format, set } from "date-fns";
+import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
-import { Calendar } from "../ui/calendar";
+import { Calendar } from "@/components/ui/calendar";
 import { ptBR } from "date-fns/locale";
 import { newTransaction } from "@/lib/db";
-import { toast } from "../ui/use-toast";
+import { toast } from "@/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@clerk/nextjs";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Procedure } from "@/components/procedures/schema";
+import { Agreement } from "@/components/agreements/schema";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const currencyConfig = {
   locale: "pt-BR",
@@ -55,7 +63,12 @@ const currencyConfig = {
   },
 };
 
-export function TransactionForm() {
+type Props = {
+  procedures: Procedure[];
+  agreements: Agreement[];
+};
+
+export function TransactionForm({ procedures, agreements }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const { userId } = useAuth();
@@ -140,11 +153,34 @@ export function TransactionForm() {
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                        <Input
-                          id="procedure"
-                          className="col-span-3"
+                        <Select
                           {...form.register("procedure")}
-                        />
+                          onValueChange={(value) => {
+                            form.setValue("procedure", value);
+                            console.log(value);
+                            form.setValue(
+                              "amount",
+                              (procedures.find(
+                                (procedure) =>
+                                  Number(procedure.id) === Number(value)
+                              )?.amount || 0) * 1
+                            );
+                          }}
+                        >
+                          <SelectTrigger className="min-w-[218px] max-w-[220px] w-full">
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {procedures.map((procedure) => (
+                              <SelectItem
+                                key={procedure.id}
+                                value={String(procedure.id)}
+                              >
+                                {procedure.title}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -161,11 +197,44 @@ export function TransactionForm() {
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                        <Input
-                          id="agreement"
-                          className="col-span-3"
+                        <Select
                           {...form.register("agreement")}
-                        />
+                          onValueChange={(value) => {
+                            form.setValue("agreement", value);
+                            const amount =
+                              procedures.find(
+                                (procedure) =>
+                                  Number(procedure.id) ===
+                                  Number(form.getValues("procedure"))
+                              )?.amount || 0;
+
+                            form.setValue(
+                              "amount",
+                              (Number(
+                                agreements.find(
+                                  (agreement) =>
+                                    Number(agreement.id) === Number(value)
+                                )?.multiplier
+                              ) || 1) *
+                                amount *
+                                1
+                            );
+                          }}
+                        >
+                          <SelectTrigger className="min-w-[218px] max-w-[220px] w-full">
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {agreements.map((agreement) => (
+                              <SelectItem
+                                key={agreement.id}
+                                value={String(agreement.id)}
+                              >
+                                {agreement.title}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </FormControl>
                       <FormMessage />
                     </FormItem>

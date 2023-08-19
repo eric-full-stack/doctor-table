@@ -6,8 +6,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 import { statuses } from "./data";
 import { Transaction } from "./schema";
-import { DataTableColumnHeader } from "@/components/transactions/data-table-column-header";
-import { DataTableRowActions } from "@/components/transactions/data-table-row-actions";
+import { DataTableColumnHeader } from "@/components/data-table-column-header";
+import { DataTableRowActions } from "@/components/data-table-row-actions";
 import { CheckCircledIcon } from "@radix-ui/react-icons";
 import { format, parseISO } from "date-fns";
 import { Badge } from "../ui/badge";

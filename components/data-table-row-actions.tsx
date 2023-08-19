@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 
 import { DollarSign } from "lucide-react";
 import { payTransaction } from "@/lib/db";
-import { toast } from "../ui/use-toast";
+import { toast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
 
 interface DataTableRowActionsProps<TData> {

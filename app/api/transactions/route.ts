@@ -19,7 +19,23 @@ export async function POST(req: Request, res: Response) {
 
 export async function GET() {
   const { userId } = auth();
-  const result =
-    await sql`SELECT * FROM transactions WHERE user_id = ${userId} ORDER BY date DESC`;
+  const result = await sql`
+    SELECT
+      transactions.id,
+      transactions.title,
+      transactions.status,
+      transactions.amount,
+      procedures.title AS procedure,
+      agreements.title AS agreement,
+      transactions.assistant,
+      transactions.user_id,
+      transactions.date,
+      transactions.createdAt,
+      transactions.updatedAt
+    FROM transactions
+    INNER JOIN procedures ON transactions.procedure_id = procedures.id
+    INNER JOIN agreements ON transactions.agreement_id = agreements.id
+    WHERE transactions.user_id = ${userId}
+    ORDER BY date DESC`;
   return new Response(JSON.stringify(result.rows), { status: 200 });
 }
