@@ -242,6 +242,50 @@ export function TransactionForm({ procedures, agreements }: Props) {
                 />
               </div>
               <div className="flex items-center gap-4">
+                <Label htmlFor="title" className="text-right w-[100px]">
+                  Multiplicador
+                </Label>
+                <FormField
+                  control={form.control}
+                  name="amount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input
+                          id="title"
+                          type="number"
+                          step={0.1}
+                          defaultValue={1}
+                          className="col-span-3"
+                          onChange={(event) => {
+                            const multiplier = Number(event.target.value);
+                            if (!multiplier) return;
+                            let amount =
+                              procedures.find(
+                                (procedure) =>
+                                  Number(procedure.id) ===
+                                  Number(form.getValues("procedure"))
+                              )?.amount || 0;
+                            amount =
+                              (Number(
+                                agreements.find(
+                                  (agreement) =>
+                                    Number(agreement.id) ===
+                                    Number(form.getValues("agreement"))
+                                )?.multiplier
+                              ) || 1) *
+                              amount *
+                              1;
+                            form.setValue("amount", multiplier * amount);
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="flex items-center gap-4">
                 <Label htmlFor="amount" className="text-right w-[100px]">
                   Valor
                 </Label>
@@ -273,6 +317,7 @@ export function TransactionForm({ procedures, agreements }: Props) {
                   )}
                 />
               </div>
+
               <div className="flex  items-center gap-4">
                 <Label htmlFor="date" className="text-right w-[100px]">
                   Data
