@@ -16,6 +16,13 @@ import { Transaction, transactionSchema } from "./schema";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { Checkbox } from "../ui/checkbox";
 import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import {
   Form,
   FormControl,
   FormField,
@@ -30,7 +37,7 @@ import {
 } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Check, ChevronsUpDown } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { ptBR } from "date-fns/locale";
 import { newTransaction } from "@/lib/db";
@@ -149,42 +156,85 @@ export function TransactionForm({ procedures, agreements }: Props) {
                 </Label>
                 <FormField
                   control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Select
-                          {...form.register("procedure")}
-                          onValueChange={(value) => {
-                            form.setValue("procedure", value);
-                            console.log(value);
-                            form.setValue(
-                              "amount",
-                              (procedures.find(
-                                (procedure) =>
-                                  Number(procedure.id) === Number(value)
-                              )?.amount || 0) * 1
-                            );
-                          }}
-                        >
-                          <SelectTrigger className="min-w-[218px] max-w-[220px] w-full">
-                            <SelectValue placeholder="Selecione" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {procedures.map((procedure) => (
-                              <SelectItem
-                                key={procedure.id}
-                                value={String(procedure.id)}
+                  name="procedure"
+                  render={({ field }) => {
+                    return (
+                      <FormItem className="flex flex-col">
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                className={cn(
+                                  "min-w-[218px] max-w-[220px] w-full justify-between",
+                                  !field.value && "text-muted-foreground"
+                                )}
                               >
-                                {procedure.title}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                                {field.value
+                                  ? procedures.find(
+                                      (procedure) =>
+                                        Number(procedure.id) ===
+                                        Number(field.value)
+                                    )?.title
+                                  : "Selecione..."}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="min-w-[218px] max-w-[220px] w-full p-0">
+                            <Command>
+                              <CommandInput placeholder="Procurar procedimento..." />
+                              <CommandEmpty>
+                                Procedimento não encontrado
+                              </CommandEmpty>
+                              <CommandGroup>
+                                {procedures.map((procedure) => (
+                                  <CommandItem
+                                    value={procedure.title}
+                                    key={procedure.title}
+                                    onSelect={(value) => {
+                                      const selectedProcedure = procedures.find(
+                                        (procedure) =>
+                                          procedure.title
+                                            .toLocaleLowerCase()
+                                            .trim() === value
+                                      );
+                                      if (!selectedProcedure) return;
+                                      form.setValue(
+                                        "procedure",
+                                        String(procedure.id)
+                                      );
+                                      form.setValue(
+                                        "amount",
+                                        (procedures.find(
+                                          (procedure) =>
+                                            Number(procedure.id) ===
+                                            Number(selectedProcedure.id)
+                                        )?.amount || 0) * 1
+                                      );
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        Number(procedure.id) ===
+                                          Number(field.value)
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                      )}
+                                    />
+                                    {procedure.title}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
               </div>
               <div className="flex items-center gap-4">
@@ -193,52 +243,92 @@ export function TransactionForm({ procedures, agreements }: Props) {
                 </Label>
                 <FormField
                   control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Select
-                          {...form.register("agreement")}
-                          onValueChange={(value) => {
-                            form.setValue("agreement", value);
-                            const amount =
-                              procedures.find(
-                                (procedure) =>
-                                  Number(procedure.id) ===
-                                  Number(form.getValues("procedure"))
-                              )?.amount || 0;
-
-                            form.setValue(
-                              "amount",
-                              (Number(
-                                agreements.find(
-                                  (agreement) =>
-                                    Number(agreement.id) === Number(value)
-                                )?.multiplier
-                              ) || 1) *
-                                amount *
-                                1
-                            );
-                          }}
-                        >
-                          <SelectTrigger className="min-w-[218px] max-w-[220px] w-full">
-                            <SelectValue placeholder="Selecione" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {agreements.map((agreement) => (
-                              <SelectItem
-                                key={agreement.id}
-                                value={String(agreement.id)}
+                  name="agreement"
+                  render={({ field }) => {
+                    return (
+                      <FormItem className="flex flex-col">
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                className={cn(
+                                  "min-w-[218px] max-w-[220px] w-full justify-between",
+                                  !field.value && "text-muted-foreground"
+                                )}
                               >
-                                {agreement.title}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                                {field.value
+                                  ? agreements.find(
+                                      (agreement) =>
+                                        Number(agreement.id) ===
+                                        Number(field.value)
+                                    )?.title
+                                  : "Selecione..."}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="min-w-[218px] max-w-[220px] w-full p-0">
+                            <Command>
+                              <CommandInput placeholder="Procurar convênio..." />
+                              <CommandEmpty>
+                                Convênio não encontrado
+                              </CommandEmpty>
+                              <CommandGroup>
+                                {agreements.map((agreement) => (
+                                  <CommandItem
+                                    value={agreement.title}
+                                    key={Math.random()}
+                                    onSelect={(value) => {
+                                      const selectedAgreement = agreements.find(
+                                        (agreement) =>
+                                          agreement.title
+                                            .toLocaleLowerCase()
+                                            .trim() === value
+                                      );
+
+                                      if (!selectedAgreement) return;
+                                      const amount =
+                                        procedures.find(
+                                          (procedures) =>
+                                            Number(procedures.id) ===
+                                            Number(form.getValues("procedure"))
+                                        )?.amount || 0;
+
+                                      form.setValue(
+                                        "amount",
+                                        (Number(selectedAgreement.multiplier) ||
+                                          1) *
+                                          amount *
+                                          1
+                                      );
+                                      form.setValue(
+                                        "agreement",
+                                        String(selectedAgreement.id)
+                                      );
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        Number(agreement.id) ===
+                                          Number(field.value)
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                      )}
+                                    />
+                                    {agreement.title}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
               </div>
               <div className="flex items-center gap-4">
