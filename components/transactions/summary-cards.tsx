@@ -18,54 +18,47 @@ import {
 import { ArrowDownIcon, ArrowUpIcon } from "lucide-react";
 
 export default function SummaryCards({ data }: { data: Transaction[] }) {
-  const totalToday = data.reduce((acc, curr) => {
-    if (curr.status === "paid" && isToday(new Date(curr.date))) {
-      return acc + Number(curr.amount);
-    }
-    return acc;
-  }, 0);
-  const totalYesterday = data.reduce((acc, curr) => {
-    const currDate = new Date(curr.date);
-    if (curr.status === "paid" && isYesterday(currDate)) {
-      return acc + Number(curr.amount);
-    }
-    return acc;
-  }, 0);
+  type TimePeriod =
+    | "today"
+    | "yesterday"
+    | "week"
+    | "lastWeek"
+    | "month"
+    | "lastMonth";
 
-  const totalWeek = data.reduce((acc, curr) => {
-    const currDate = new Date(curr.date);
-    const isWeek = isSameWeek(currDate, new Date());
-    if (isWeek && curr.status === "paid") {
-      return acc + Number(curr.amount);
-    }
-    return acc;
-  }, 0);
+  const totals: Record<TimePeriod, (date: Date) => boolean> = {
+    today: isToday,
+    yesterday: isYesterday,
+    week: (date) => isSameWeek(date, new Date()),
+    lastWeek: (date) => differenceInCalendarWeeks(new Date(), date) == 1,
+    month: (date) => isSameMonth(date, new Date()),
+    lastMonth: (date) => differenceInCalendarMonths(new Date(), date) == 1,
+  };
 
-  const totalLastWeek = data.reduce((acc, curr) => {
-    const currDate = new Date(curr.date);
-    const isLastWeek = differenceInCalendarWeeks(new Date(), currDate) == 1;
-    if (isLastWeek && curr.status === "paid") {
-      return acc + Number(curr.amount);
-    }
-    return acc;
-  }, 0);
+  type ResultType = {
+    [key in TimePeriod]: { paid: number; pending: number; total: number };
+  };
 
-  const totalMonth = data.reduce((acc, curr) => {
-    const currDate = new Date(curr.date);
-    if (isSameMonth(currDate, new Date()) && curr.status === "paid") {
-      return acc + Number(curr.amount);
-    }
-    return acc;
-  }, 0);
+  const results: ResultType = {
+    today: { paid: 0, pending: 0, total: 0 },
+    yesterday: { paid: 0, pending: 0, total: 0 },
+    week: { paid: 0, pending: 0, total: 0 },
+    lastWeek: { paid: 0, pending: 0, total: 0 },
+    month: { paid: 0, pending: 0, total: 0 },
+    lastMonth: { paid: 0, pending: 0, total: 0 },
+  };
 
-  const totalLastMonth = data.reduce((acc, curr) => {
-    const currDate = new Date(curr.date);
-    const isLastMonth = differenceInCalendarMonths(new Date(), currDate) == 1;
-    if (isLastMonth && curr.status === "paid") {
-      return acc + Number(curr.amount);
-    }
-    return acc;
-  }, 0);
+  for (let key in totals) {
+    data.forEach((curr) => {
+      const currDate = new Date(curr.date);
+      if (totals[key as TimePeriod](currDate)) {
+        results[key as TimePeriod][curr.status as "pending" | "paid"] += Number(
+          curr.amount
+        );
+        results[key as TimePeriod].total += Number(curr.amount);
+      }
+    });
+  }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -76,7 +69,7 @@ export default function SummaryCards({ data }: { data: Transaction[] }) {
         </CardHeader>
         <CardContent>
           <p className="text-4xl font-bold">
-            {totalToday.toLocaleString("pt-BR", {
+            {results.today.total.toLocaleString("pt-BR", {
               style: "currency",
               currency: "BRL",
             })}
@@ -84,13 +77,19 @@ export default function SummaryCards({ data }: { data: Transaction[] }) {
         </CardContent>
         <CardFooter>
           <p className="text-sm text-muted-foreground">
-            {totalYesterday / (totalToday || 1) > 1 ? (
+            {results.yesterday.total / (results.today.total || 1) > 1 ? (
               <span className="text-red-500 text-sm flex">
-                {totalYesterday / (totalToday || 1)}% <ArrowDownIcon /> ontem
+                {(results.yesterday.total / (results.today.total || 1)).toFixed(
+                  2
+                )}
+                % <ArrowDownIcon /> ontem
               </span>
             ) : (
               <span className="text-green-500 text-sm flex items-center">
-                {totalToday / (totalYesterday || 1)}% <ArrowUpIcon />
+                {(results.today.total / (results.yesterday.total || 1)).toFixed(
+                  2
+                )}
+                % <ArrowUpIcon />
                 ontem
               </span>
             )}
@@ -104,7 +103,7 @@ export default function SummaryCards({ data }: { data: Transaction[] }) {
         </CardHeader>
         <CardContent>
           <p className="text-4xl font-bold">
-            {totalWeek.toLocaleString("pt-BR", {
+            {results.week.total.toLocaleString("pt-BR", {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
               style: "currency",
@@ -114,14 +113,19 @@ export default function SummaryCards({ data }: { data: Transaction[] }) {
         </CardContent>
         <CardFooter>
           <p className="text-sm text-muted-foreground">
-            {totalLastWeek / (totalWeek || 1) > 1 ? (
+            {results.lastWeek.total / (results.week.total || 1) > 1 ? (
               <span className="text-red-500 text-sm flex">
-                {totalLastWeek / (totalWeek || 1)}% <ArrowDownIcon /> semana
-                passada
+                {(results.lastWeek.total / (results.week.total || 1)).toFixed(
+                  2
+                )}
+                % <ArrowDownIcon /> semana passada
               </span>
             ) : (
               <span className="text-green-500 text-sm flex items-center">
-                {totalWeek / (totalLastWeek || 1)}% <ArrowUpIcon />
+                {(results.week.total / (results.lastWeek.total || 1)).toFixed(
+                  2
+                )}
+                % <ArrowUpIcon />
                 semana passada
               </span>
             )}
@@ -135,7 +139,7 @@ export default function SummaryCards({ data }: { data: Transaction[] }) {
         </CardHeader>
         <CardContent>
           <p className="text-4xl font-bold">
-            {totalMonth.toLocaleString("pt-BR", {
+            {results.month.total.toLocaleString("pt-BR", {
               style: "currency",
               currency: "BRL",
             })}
@@ -143,15 +147,19 @@ export default function SummaryCards({ data }: { data: Transaction[] }) {
         </CardContent>
         <CardFooter>
           <p className="text-sm text-muted-foreground">
-            {totalLastMonth / (totalMonth || 1) > 1 ? (
+            {results.lastMonth.total / (results.month.total || 1) > 1 ? (
               <span className="text-red-500 text-sm flex">
-                {totalLastMonth / (totalMonth || 1)}% <ArrowDownIcon /> mês
-                passado
+                {(results.lastMonth.total / (results.month.total || 1)).toFixed(
+                  2
+                )}
+                % <ArrowDownIcon /> mês passado
               </span>
             ) : (
               <span className="text-green-500 text-sm flex items-center">
-                {(totalMonth / (totalLastMonth || 1)).toFixed(2)}%{" "}
-                <ArrowUpIcon /> mês passado
+                {(results.month.total / (results.lastMonth.total || 1)).toFixed(
+                  2
+                )}
+                % <ArrowUpIcon /> mês passado
               </span>
             )}
           </p>
