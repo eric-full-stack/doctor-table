@@ -3,7 +3,7 @@ import { Procedure } from "@/components/procedures/schema";
 import { Transaction } from "@/components/transactions/schema";
 import { auth } from "@clerk/nextjs";
 import { sql } from "@vercel/postgres";
-import { format } from "date-fns";
+import { parseISO, format } from "date-fns";
 
 export async function getProcedures() {
   const { getToken } = auth();
@@ -89,7 +89,7 @@ export async function payTransaction(id: number, status: string) {
 
     return result.rows[0];
   } else {
-    const result = await fetch(`/api/transactions/${id}`, {
+    const result = await fetch(`/api/transactions/${id}/pay`, {
       method: "PUT",
       body: JSON.stringify({ status }),
     });
@@ -118,6 +118,34 @@ export async function newTransaction(data: Transaction) {
   } else {
     const result = await fetch("/api/transactions", {
       method: "POST",
+      body: JSON.stringify(data),
+    });
+    return result.json();
+  }
+}
+
+export async function updateTransaction(data: Transaction) {
+  if (typeof window === "undefined") {
+    const {
+      id,
+      title,
+      status,
+      amount,
+      procedure,
+      assistant,
+      agreement,
+      date,
+      user_id,
+    } = data;
+    const result =
+      await sql`UPDATE transactions SET title = ${title}, status = ${status}, amount = ${amount}, procedure_id = ${procedure}, assistant = ${assistant}, agreement_id = ${agreement}, date = ${format(
+        parseISO(date.toString()),
+        "yyyy-MM-dd"
+      )} WHERE id = ${id} AND user_id = ${user_id} RETURNING *`;
+    return result.rows[0];
+  } else {
+    const result = await fetch(`/api/transactions/${data.id}`, {
+      method: "PUT",
       body: JSON.stringify(data),
     });
     return result.json();

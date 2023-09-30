@@ -35,26 +35,19 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { CalendarIcon, Check, ChevronsUpDown } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { ptBR } from "date-fns/locale";
-import { newTransaction } from "@/lib/db";
+import { newTransaction, updateTransaction } from "@/lib/db";
 import { toast } from "@/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@clerk/nextjs";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Procedure } from "@/components/procedures/schema";
 import { Agreement } from "@/components/agreements/schema";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 const currencyConfig = {
   locale: "pt-BR",
@@ -79,6 +72,17 @@ export function TransactionForm({ procedures, agreements }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const { userId } = useAuth();
+
+  const params = useSearchParams();
+  const editTransaction = params.get("edit");
+
+  async function getTransaction() {
+    if (!editTransaction) return;
+    const response = await fetch(`/api/transactions/${editTransaction}`);
+    const transaction = await response.json();
+    return transaction;
+  }
+
   const form = useForm<Transaction>({
     // @ts-ignore
     resolver: zodResolver(transactionSchema),
@@ -88,29 +92,58 @@ export function TransactionForm({ procedures, agreements }: Props) {
       user_id: userId!,
     },
   });
+
+  useEffect(() => {
+    if (editTransaction) {
+      getTransaction().then((transaction) => {
+        form.setValue("id", String(transaction.id), {
+          shouldValidate: true,
+          shouldDirty: true,
+        });
+        form.setValue("title", transaction.title);
+        form.setValue("procedure", String(transaction.procedure_id));
+        form.setValue("agreement", String(transaction.agreement_id));
+        form.setValue("amount", Number(transaction.amount));
+        form.setValue("date", parseISO(transaction.date));
+        form.setValue("status", transaction.status);
+        form.setValue("assistant", transaction.assistant);
+      });
+      setOpen(true);
+    }
+  }, [editTransaction]);
+
   const onSubmit: SubmitHandler<Transaction> = async (data) => {
     try {
-      const transaction = await newTransaction(data);
+      const action = editTransaction ? updateTransaction : newTransaction;
+      const transaction = await action(data);
       if (transaction) {
         toast({
-          title: "Lançamento cadastrado com sucesso!",
+          title: `Lançamento ${editTransaction ? "atualizado" : "cadastrado"}!`,
         });
         setOpen(false);
         form.reset();
+        router.push("/?showCards=false");
         router.refresh();
       }
     } catch (e) {
       toast({
-        title: "Erro ao cadastrar lançamento!",
+        title: `Erro ao ${
+          editTransaction ? "atualizar" : "cadastrar"
+        } lançamento!`,
         variant: "destructive",
       });
     }
   };
+
+  if (editTransaction && !form.getValues("id")) return null;
+
   return (
     <Sheet
       open={open}
       onOpenChange={(open) => {
         setOpen(open);
+        form.reset();
+        router.push("/?showCards=false");
       }}
     >
       <SheetTrigger asChild>
@@ -458,6 +491,7 @@ export function TransactionForm({ procedures, agreements }: Props) {
                   id="status"
                   className="col-span-3"
                   {...form.register("status")}
+                  defaultChecked={form.getValues("status") === "paid"}
                   onCheckedChange={(checked) => {
                     form.setValue("status", checked ? "paid" : "pending");
                   }}
@@ -471,6 +505,7 @@ export function TransactionForm({ procedures, agreements }: Props) {
                   id="assistant"
                   className="col-span-3"
                   {...form.register("assistant")}
+                  defaultChecked={form.getValues("assistant")}
                   onCheckedChange={(checked) => {
                     form.setValue("assistant", !!checked);
                   }}
@@ -478,7 +513,9 @@ export function TransactionForm({ procedures, agreements }: Props) {
               </div>
             </div>
             <SheetFooter className="mt-5">
-              <Button type="submit">Cadastrar</Button>
+              <Button type="submit">
+                {editTransaction ? "Atualizar" : "Cadastrar"}
+              </Button>
             </SheetFooter>
           </form>
         </Form>

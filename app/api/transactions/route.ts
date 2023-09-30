@@ -1,5 +1,5 @@
 import { transactionSchema } from "@/components/transactions/schema";
-import { getTransactions, newTransaction } from "@/lib/db";
+import { newTransaction } from "@/lib/db";
 import { auth } from "@clerk/nextjs";
 import { sql } from "@vercel/postgres";
 

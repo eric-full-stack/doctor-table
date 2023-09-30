@@ -2,8 +2,6 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 
-import { Checkbox } from "@/components/ui/checkbox";
-
 import { statuses } from "./data";
 import { Transaction } from "./schema";
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
@@ -129,6 +127,9 @@ export const columns: ColumnDef<Transaction>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Valor" />
     ),
+    sortingFn: (a, b) => {
+      return Number(a.getValue("amount")) - Number(b.getValue("amount"));
+    },
     cell: ({ row }) => {
       return (
         <div className="flex items-center">

@@ -4,7 +4,7 @@ import { Row } from "@tanstack/react-table";
 
 import { Button } from "@/components/ui/button";
 
-import { DollarSign } from "lucide-react";
+import { DollarSign, Edit } from "lucide-react";
 import { payTransaction } from "@/lib/db";
 import { toast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
@@ -38,9 +38,18 @@ export function DataTableRowActions<TData>({
     }
   };
 
+  const handleEdit = () => {
+    router.push(`/?showCards=false&edit=${row.getValue("id")}`);
+  };
+
   return (
-    <Button size={"icon"} variant={"default"} onClick={handlePayTransaction}>
-      <DollarSign className="h-4 w-4" />
-    </Button>
+    <div className="flex flex-row gap-12">
+      <Button size={"icon"} variant={"default"} onClick={handlePayTransaction}>
+        <DollarSign className="h-4 w-4" />
+      </Button>
+      <Button size={"icon"} variant={"ghost"} onClick={handleEdit}>
+        <Edit className="h-4 w-4" />
+      </Button>
+    </div>
   );
 }
